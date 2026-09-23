@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Aulas - MedCof - Semiextensivo TEP 2026</title>
+    <style>
+        :root {
+            --bg:#f4f7f6; --panel:#fff; --text:#263238; --muted:#6b7a86; --line:#dce4e8;
+            --header:#34495e; --header-hover:#2c3e50; --accent:#2980b9; --success:#27ae60;
+            --danger:#c0392b; --warning:#e67e22; --diamond:#59c9df;
+            --class-title-color:#2980b9; --cut-color:#e74c3c; --seen-color:#95a5a6;
+        }
+        * { box-sizing: border-box; }
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg); margin:0; padding:20px; color:var(--text); }
+        .container { max-width:1080px; margin:auto; background:var(--panel); padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.09); }
+        h1 { text-align:center; color:#2c3e50; margin:4px 0 20px; }
+        .config-panel { background:#dff9fb; padding:15px; border-radius:8px; margin-bottom:16px; border:1px solid #c7ecee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; }
+        .date-config { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+        .date-config label { font-size:1.05em; font-weight:700; }
+        .date-config input { padding:8px; border-radius:5px; border:1px solid #bbb; font-size:1em; font-weight:700; color:#2c3e50; }
+        .top-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        button,.button-link { border:0; border-radius:5px; cursor:pointer; font-weight:700; color:#fff; padding:9px 13px; transition:.18s; text-decoration:none; font-size:.9rem; display:inline-flex; align-items:center; gap:5px; }
+        .btn-export { background:#3498db; } .btn-import { background:#e67e22; } .btn-theme { background:#6c5ce7; } .btn-manage { background:#455a64; }
+        button:hover,.button-link:hover { filter:brightness(.92); }
+        .storage-note { margin:0 0 18px; padding:10px 14px; border-radius:7px; background:#f8f9fa; border:1px solid #e1e5e8; color:#5d6d7e; font-size:.92em; display:flex; gap:10px 20px; justify-content:space-between; flex-wrap:wrap; }
+        .save-status { font-weight:700; color:var(--success); }
+        .save-status.warning { color:var(--danger); }
+        .dashboard { display:grid; grid-template-columns:repeat(5,minmax(130px,1fr)); gap:10px; margin-bottom:12px; background:#eef2f5; padding:14px; border-radius:8px; }
+        .stat-box { text-align:center; font-size:1em; font-weight:700; background:#fff; padding:12px 8px; border-radius:7px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+        .stat-value { display:block; font-size:1.45rem; margin-top:3px; }
+        .progress-wrap { background:#eef2f5; border-radius:8px; padding:12px 14px; margin-bottom:18px; }
+        .progress-label { display:flex; justify-content:space-between; gap:12px; font-size:.92rem; margin-bottom:7px; color:#52616b; }
+        .progress-bar { height:16px; background:#d7dee3; border-radius:99px; overflow:hidden; }
+        .progress-fill { height:100%; width:0; background:linear-gradient(90deg,#27ae60,#3498db); transition:width .25s ease; }
+        .filter-note { margin:0 0 16px; padding:10px 14px; border-left:4px solid #607d8b; background:#f7f9fa; border-radius:6px; font-size:.92rem; }
+        .block-header { background:var(--header); color:#fff; padding:12px 15px; margin-top:18px; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:.18s; gap:10px; }
+        .block-header:hover { background:var(--header-hover); }
+        .block-content { display:none; padding:10px 0; }
+        .class-item { display:flex; align-items:center; justify-content:space-between; background:#fafafa; margin-bottom:8px; padding:12px 15px; border-left:6px solid #ccc; border-radius:4px; transition:.2s; gap:10px; }
+        .class-item:hover { background:#f0f0f0; }
+        .class-info { flex:1; min-width:180px; }
+        .class-title { font-weight:700; font-size:1.02em; color:var(--class-title-color); transition:.2s; }
+        .class-spec { font-size:.84em; color:#7f8c8d; margin-top:3px; }
+        .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+        select { padding:6px; border-radius:4px; border:1px solid #ccc; font-weight:700; cursor:pointer; max-width:245px; }
+        select.diamante { color:#168aad; background:#e8f9fd; border-color:#7bdff2; }
+        select.verde { color:#27ae60; background:#eafaf1; border-color:#27ae60; }
+        select.amarela { color:#f39c12; background:#fef5e7; border-color:#f39c12; }
+        select.vermelha { color:#c0392b; background:#fdedec; border-color:#c0392b; }
+        select.bônus { color:#8e44ad; background:#f6edfa; border-color:#9b59b6; }
+        .seen-checkbox { transform:scale(1.45); cursor:pointer; accent-color:#27ae60; }
+        .btn-cut { background:#fff; border:1px solid #ccc; color:#333; padding:5px 8px; font-size:1.05em; }
+        .btn-cut.active { background:#e74c3c; border-color:#c0392b; color:#fff; }
+        .btn-plan { background:#fff; border:1px solid #9aa8b2; color:#52616b; padding:5px 8px; font-size:1.05em; }
+        .btn-plan.active { background:#2980b9; border-color:#2471a3; color:#fff; }
+        .class-item.out-of-plan { background:repeating-linear-gradient(135deg,#fafafa,#fafafa 11px,#f1f4f6 11px,#f1f4f6 22px); border-right:3px dashed #8796a1; }
+        .class-item.out-of-plan .class-title { color:#73818b; }
+        .plan-badge { display:inline-block; margin-left:7px; padding:2px 7px; border-radius:10px; font-size:.72rem; font-weight:800; background:#e7ecef; color:#52616b; vertical-align:middle; white-space:nowrap; }
+        .pin-badge { display:inline-block; margin-left:7px; padding:2px 7px; border-radius:10px; font-size:.72rem; font-weight:800; background:#e8f4fb; color:#2471a3; vertical-align:middle; white-space:nowrap; }
+        .badge { padding:4px 9px; border-radius:12px; font-size:.8em; font-weight:700; color:#fff; white-space:nowrap; }
+        .badge.liberado { background:#27ae60; } .badge.pendente { background:#e67e22; }
+        .empty-state { text-align:center; color:#7f8c8d; padding:40px 16px; font-size:1.06em; }
+        .bottom-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:34px 0 2px; padding-top:20px; border-top:1px solid var(--line); }
+        .about-link { background:transparent; border:1px solid #aeb9c1; color:#60717d; font-weight:600; }
+        .about-link:hover { background:#f2f5f7; filter:none; }
+        .source-mini { text-align:center; color:#89959d; font-size:.78rem; margin-top:12px; }
+        body.dark-mode { --bg:#121416; --panel:#1d2024; --text:#e5e7eb; --muted:#b0bac2; --line:#3b4148; --header:#30353b; --header-hover:#3a4047; --class-title-color:#70b7ff; --cut-color:#ff7979; --seen-color:#a7adb4; background:#121416; color:#e5e7eb; }
+        body.dark-mode h1 { color:#f1f3f5; }
+        body.dark-mode .container { box-shadow:0 4px 14px rgba(0,0,0,.45); }
+        body.dark-mode .config-panel { background:#202b31; border-color:#3a4a53; }
+        body.dark-mode .date-config input { background:#2a2f35; color:#e5e7eb; border-color:#59616a; color-scheme:dark; }
+        body.dark-mode .storage-note,body.dark-mode .filter-note { background:#24282d; border-color:#3b4148; color:#bdc4cc; }
+        body.dark-mode .dashboard,body.dark-mode .progress-wrap { background:#292d32; }
+        body.dark-mode .stat-box { background:#24282d; color:#e5e7eb; }
+        body.dark-mode .progress-bar { background:#444b52; }
+        body.dark-mode .class-item { background:#24282d; } body.dark-mode .class-item:hover { background:#2c3137; }
+        body.dark-mode .class-spec { color:#aeb6bf; }
+        body.dark-mode .btn-cut { background:#2a2f35; color:#f1f3f5; border-color:#59616a; }
+        body.dark-mode .btn-cut.active { background:#713535; border-color:#d45b5b; }
+        body.dark-mode .btn-plan { background:#2a2f35; color:#c7d0d7; border-color:#59616a; }
+        body.dark-mode .btn-plan.active { background:#245b80; border-color:#4a9bd1; color:#fff; }
+        body.dark-mode .class-item.out-of-plan { background:repeating-linear-gradient(135deg,#24282d,#24282d 11px,#2b3036 11px,#2b3036 22px); border-right-color:#77838d; }
+        body.dark-mode .class-item.out-of-plan .class-title { color:#9ca8b1; }
+        body.dark-mode .plan-badge { background:#3a4148; color:#c4cdd4; }
+        body.dark-mode .pin-badge { background:#19384e; color:#8bc9ef; }
+        body.dark-mode select { border-color:#59616a; }
+        body.dark-mode select.diamante { color:#9be8f6; background:#15343b; border-color:#52c7df; }
+        body.dark-mode select.verde { color:#7ee2a8; background:#173b2a; border-color:#2fbf71; }
+        body.dark-mode select.amarela { color:#ffd166; background:#463514; border-color:#d79b25; }
+        body.dark-mode select.vermelha { color:#ff9494; background:#492323; border-color:#d45b5b; }
+        body.dark-mode select.bônus { color:#d9a7ed; background:#3a2442; border-color:#a968c4; }
+        body.dark-mode .about-link { color:#c2ccd3; border-color:#59616a; }
+        body.dark-mode .about-link:hover { background:#2a2f35; }
+        @media(max-width:850px) { .dashboard { grid-template-columns:repeat(2,1fr); } .class-item { align-items:flex-start; flex-wrap:wrap; } .controls { width:100%; justify-content:flex-start; padding-left:32px; } }
+        @media(max-width:520px) { body{padding:8px}.container{padding:13px}.dashboard{grid-template-columns:1fr 1fr}.block-header{align-items:flex-start;flex-direction:column}.top-actions{width:100%}.top-actions>*{flex:1;justify-content:center}.controls{padding-left:0}select{max-width:100%;width:100%} }
+    
+        .app-view { display:none; }
+        .app-view.active { display:block; }
+        .view-toolbar { display:flex; flex-direction:column; align-items:flex-start; gap:20px; margin-bottom:24px; }
+        .view-toolbar .view-back { align-self:flex-start; }
+        .view-toolbar h1 { width:100%; margin:0; text-align:center; }
+        .view-back { background:#607d8b; }
+        .manage-section { border:1px solid var(--line); border-radius:9px; padding:18px; margin:18px 0; background:var(--panel); }
+        .manage-section h2 { margin-top:0; color:inherit; }
+        .manage-note, .about-note { background:#f7f9fa; border-left:4px solid #607d8b; padding:11px 14px; border-radius:6px; color:#52616b; }
+        .manage-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .manage-btn { border:0; border-radius:5px; padding:9px 13px; color:#fff; font-weight:700; cursor:pointer; }
+        .manage-btn.primary { background:#2980b9; } .manage-btn.green { background:#27ae60; }
+        .manage-btn.orange { background:#e67e22; } .manage-btn.red { background:#c0392b; } .manage-btn.gray { background:#607d8b; }
+        .manage-status { padding:10px 12px; border-radius:6px; margin-top:10px; background:#eef7f1; color:#20653a; }
+        .manage-status.error { background:#fff0ef; color:#9e2b21; }
+        .priority-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:12px; }
+        .priority-card { border:1px solid var(--line); border-radius:8px; padding:13px; background:#fafafa; }
+        .priority-card label { display:flex; gap:8px; align-items:center; font-weight:700; }
+        .priority-card .count { font-size:.83rem; color:var(--muted); margin-top:6px; }
+        #json-editor { width:100%; min-height:390px; border:1px solid #bfc9cf; border-radius:7px; padding:12px; font-family:Consolas,'Cascadia Code',monospace; font-size:.9rem; line-height:1.45; resize:vertical; background:var(--panel); color:var(--text); }
+        .code-example { background:#18202a; color:#e9edf1; padding:14px; border-radius:7px; overflow:auto; font-size:.85rem; line-height:1.5; }
+        .about-card { max-width:820px; margin:0 auto; line-height:1.65; }
+        .about-card h2 { margin-top:28px; }
+        .about-card a { color:#2471a3; }
+        body.dark-mode .manage-note, body.dark-mode .about-note { background:#24282d; color:#bdc4cc; border-color:#59616a; }
+        body.dark-mode .priority-card { background:#24282d; }
+        body.dark-mode #json-editor { background:#171a1e; color:#e5e7eb; border-color:#59616a; }
+        body.dark-mode .manage-status { background:#173b2a; color:#8ee4b2; }
+        body.dark-mode .manage-status.error { background:#492323; color:#ffb3b3; }
+        @media(max-width:760px){ .priority-grid{grid-template-columns:1fr 1fr} }
+        @media(max-width:460px){ .priority-grid{grid-template-columns:1fr} .manage-actions>*{width:100%;justify-content:center;text-align:center} }
+</style>
+</head>
+<body class="dark-mode">
+<!--
+Cronograma de Aulas - MedCof - Semiextensivo TEP 2026
+
+Aplicação web educacional desenvolvida de forma independente por Pablo Phillipe Cândido dos Santos,
+destinada à criação, edição, adaptação e acompanhamento de cronogramas de estudo reutilizáveis, com
+controle de prioridades, progresso, aulas concluídas, exclusões planejadas e intercâmbio de dados em JSON.
+
+O desenvolvimento contou com ferramentas de inteligência artificial generativa como recurso auxiliar,
+mantendo-se sob responsabilidade do autor a concepção, implementação, integração e verificação do projeto.
+
+Currículo Lattes: http://lattes.cnpq.br/9500873674712528
+-->
+
+<div class="container">
+    <section id="view-main" class="app-view active">
+        <h1>📚 Cronograma de Aulas - MedCof - Semiextensivo TEP 2026</h1>
+
+        <div class="config-panel">
+            <div class="date-config">
+                <label for="data-inicio">📅 Data de início:</label>
+                <input type="date" id="data-inicio">
+            </div>
+            <div class="top-actions">
+                <button class="btn-export" id="btn-export-progress">💾 Exportar progresso</button>
+                <button class="btn-import" id="btn-import-progress">📂 Importar progresso</button>
+                <input type="file" id="progress-file" hidden accept=".json,application/json">
+                <button class="btn-manage" id="btn-open-manage">⚙️ Gerenciar cronograma</button>
+                <button class="btn-theme" id="theme-toggle">☀️ Modo claro</button>
+            </div>
+        </div>
+
+        <div class="storage-note">
+            <span id="save-status" class="save-status">💾 Salvamento automático local ativo.</span>
+            <span>O cronograma-padrão está incorporado neste único arquivo HTML. Cronogramas e progresso podem ser importados/exportados em JSON.</span>
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-box">Total<span class="stat-value" id="total-aulas">0</span></div>
+            <div class="stat-box" style="color:#27ae60">Vistas<span class="stat-value" id="vistas">0</span></div>
+            <div class="stat-box" style="color:#c0392b">Removidas<span class="stat-value" id="removidas">0</span></div>
+            <div class="stat-box" style="color:#e67e22">Pendentes<span class="stat-value" id="pendentes">0</span></div>
+            <div class="stat-box" style="color:#2980b9">Progresso<span class="stat-value" id="progresso">0%</span></div>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-label"><span>Progresso do cronograma</span><span id="progress-detail">0 de 0 aulas tratadas</span></div>
+            <div class="progress-bar" aria-label="Progresso total"><div id="progress-fill" class="progress-fill"></div></div>
+        </div>
+
+        <div class="filter-note" id="filter-note">
+            Todas as classes de prioridade estão incluídas. Use <strong>Gerenciar cronograma</strong> para adaptar o plano ao tempo disponível.
+        </div>
+
+        <div id="schedule-container"><div class="empty-state">Carregando cronograma...</div></div>
+
+        <div class="bottom-actions">
+            <button class="button-link about-link" id="btn-open-about">Sobre o projeto</button>
+        </div>
+        <div class="source-mini">Projeto independente e não oficial. Consulte “Sobre o projeto” para informações de autoria e origem do cronograma.</div>
+    </section>
+
+    <section id="view-manage" class="app-view">
+        <div class="view-toolbar">
+            <button class="view-back" id="btn-back-manage">← Voltar ao cronograma</button>
+            <h1>⚙️ Gerenciar cronograma</h1>
+        </div>
+        <p class="manage-note">Esta área funciona como uma segunda página interna do webapp, mas permanece integralmente dentro deste mesmo arquivo <strong>index.html</strong>.</p>
+
+        <div class="manage-section">
+            <h2>Classes de prioridade incluídas no plano</h2>
+            <p>Desmarque uma classe para colocá-la temporariamente <strong>fora do plano</strong>. As aulas continuarão visíveis no cronograma principal com uma marcação própria e poderão ser marcadas como vistas normalmente. Use o botão <strong>📌</strong> ao lado da tesoura para manter uma aula específica no plano mesmo quando a classe dela estiver desmarcada. Aulas fora do plano contam como tratadas no cálculo do progresso enquanto não forem vistas.</p>
+            <div class="priority-grid" id="priority-grid"></div>
+            <div class="manage-actions" style="margin-top:12px"><button class="manage-btn green" id="save-priorities">Salvar classes selecionadas</button></div>
+            <div id="priority-status" class="manage-status" hidden></div>
+        </div>
+
+        <div class="manage-section">
+            <h2>Importar e exportar cronograma JSON</h2>
+            <p>O cronograma-padrão está incorporado neste arquivo HTML. Você pode exportar o cronograma ativo para um arquivo <code>.json</code>, editá-lo em qualquer editor de texto e importá-lo novamente. Também é possível criar um cronograma completamente novo.</p>
+            <div class="manage-actions">
+                <button class="manage-btn primary" id="export-schedule">Exportar cronograma atual</button>
+                <button class="manage-btn orange" id="import-schedule">Importar arquivo JSON</button>
+                <input type="file" id="schedule-file" accept=".json,application/json" hidden>
+                <button class="manage-btn gray" id="load-editor">Carregar cronograma no editor</button>
+                <button class="manage-btn red" id="restore-default">Voltar ao cronograma padrão</button>
+            </div>
+            <div id="file-status" class="manage-status" hidden></div>
+        </div>
+
+        <div class="manage-section">
+            <h2>Editor de código do cronograma</h2>
+            <p>Cole ou edite abaixo um JSON completo. O sistema valida a estrutura antes de aplicar. Um <code>cronograma_id</code> diferente cria um espaço de progresso separado no navegador.</p>
+            <textarea id="json-editor" spellcheck="false" placeholder="Cole aqui o JSON do cronograma..."></textarea>
+            <div class="manage-actions" style="margin-top:10px">
+                <button class="manage-btn primary" id="validate-code">Validar código</button>
+                <button class="manage-btn green" id="apply-code">Aplicar cronograma</button>
+            </div>
+            <div id="editor-status" class="manage-status" hidden></div>
+        </div>
+
+        <div class="manage-section">
+            <h2>Como criar seu próprio cronograma</h2>
+            <p>Crie um arquivo de texto com extensão <code>.json</code>. O objeto principal deve conter um identificador do cronograma, um nome, uma data inicial no formato <code>AAAA-MM-DD</code> e a lista <code>aulas</code>. Cada aula precisa ter um <code>id</code> único.</p>
+            <pre class="code-example">{
+  "versao": 1,
+  "cronograma_id": "meu-cronograma-2026",
+  "nome": "Meu cronograma de estudos",
+  "data_inicio": "2026-04-06",
+  "aulas": [
+    {
+      "id": 1,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Hipertensão arterial sistêmica",
+      "especialidade": "Cardiologia",
+      "prioridade": "Diamante"
+    },
+    {
+      "id": 2,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Diabetes mellitus",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Verde"
+    }
+  ]
+}</pre>
+            <ul>
+                <li><strong>cronograma_id:</strong> identificador estável e diferente para cada cronograma.</li>
+                <li><strong>id:</strong> identificador único de cada aula; é ele que vincula a aula ao progresso salvo.</li>
+                <li><strong>bloco:</strong> agrupamento exibido na tela principal.</li>
+                <li><strong>data_liberacao:</strong> formato <code>DD/MM/AAAA</code>.</li>
+                <li><strong>prioridade:</strong> exatamente <code>Diamante</code>, <code>Verde</code>, <code>Amarela</code>, <code>Vermelha</code> ou <code>Bônus</code>.</li>
+                <li>JSON usa aspas duplas, vírgulas válidas e não aceita comentários.</li>
+            </ul>
+            <p class="manage-note">Dica: exporte o cronograma atual, faça uma cópia, edite-a e depois importe. Preserve os IDs das aulas se quiser manter a associação com o progresso já armazenado.</p>
+        </div>
+    </section>
+
+    <section id="view-about" class="app-view">
+        <div class="view-toolbar">
+            <button class="view-back" id="btn-back-about">← Voltar ao cronograma</button>
+            <h1>Sobre o projeto</h1>
+        </div>
+        <div class="about-card">
+            <h2>👤 Autoria e desenvolvimento</h2>
+            <p>Aplicação web educacional desenvolvida de forma independente por <strong>Pablo Phillipe Cândido dos Santos</strong>, destinada à criação, edição, adaptação e acompanhamento de cronogramas de estudo. A ferramenta permite estruturar diferentes cronogramas em JSON, acompanhar aulas concluídas, reorganizar prioridades, retirar conteúdos do plano, criar exceções individuais e calcular o progresso global.</p>
+            <p>O desenvolvimento contou com a utilização de ferramentas de inteligência artificial generativa como recurso auxiliar no processo de desenvolvimento, mantendo-se sob responsabilidade do autor a concepção, implementação, integração e verificação do projeto.</p>
+            <p>Currículo Lattes: <a href="http://lattes.cnpq.br/9500873674712528" target="_blank" rel="noopener">http://lattes.cnpq.br/9500873674712528</a></p>
+
+            <h2>Origem do cronograma MedCof</h2>
+            <div class="about-note">
+                <p>Para demonstrar o funcionamento da ferramenta, o arquivo inclui como cronograma-padrão o <strong>Semiextensivo TEP 2026 - Turma de Abril</strong> da MedCof, cujas informações foram obtidas no site da própria empresa. Esse conjunto de dados foi utilizado com finalidade meramente educativa e exemplificativa. A ferramenta, contudo, não depende desse curso: o usuário pode criar, editar, importar e utilizar cronogramas de outros cursos, provas ou rotinas de estudo por meio do formato JSON suportado.</p>
+                <p>Este é um projeto independente e não oficial. Não há vínculo, afiliação, patrocínio ou endosso da MedCof. Marcas, nomes e conteúdos de terceiros permanecem de responsabilidade de seus respectivos titulares.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script type="application/json" id="default-schedule-data">{
+  "versao": 1,
+  "cronograma_id": "medcof-semiextensivo-tep-2026-turma-abril",
+  "nome": "Cronograma de Aulas - MedCof - Semiextensivo TEP 2026",
+  "data_inicio": "2026-04-06",
+  "fonte": {
+    "descricao": "Cronograma Semiextensivo TEP 2026 - Turma de Abril da MedCof",
+    "origem": "Site oficial da MedCof",
+    "url": "https://cronograma.grupomedcof.com.br/",
+    "uso": "Conteúdo utilizado com finalidade meramente educativa como base para a construção e demonstração de um webapp de organização de cronograma de estudos."
+  },
+  "prioridades": {
+    "Diamante": "Assistir primeiro",
+    "Verde": "Assistir após as diamantes",
+    "Amarela": "Assistir após as verdes",
+    "Vermelha": "Assistir após as amarelas",
+    "Bônus": "Conteúdo bônus"
+  },
+  "aulas": [
+    {
+      "id": 1,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Onboarding TEP",
+      "especialidade": "1.Onboarding",
+      "prioridade": "Diamante"
+    },
+    {
+      "id": 2,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Aleitamento Materno",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 3,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Alimentação Infantil",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 4,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Desenvolvimento Infantil",
+      "especialidade": "Puericultura",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 5,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Alterações no Neurodesenvolvimento - TEA e TDAH",
+      "especialidade": "Puericultura",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 6,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Crescimento e Baixa Estatura",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 7,
+      "bloco": "Bloco 1",
+      "data_liberacao": "06/04/2026",
+      "aula": "Obesidade e Síndrome Metabólica",
+      "especialidade": "Puericultura",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 8,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Puberdade",
+      "especialidade": "Puericultura",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 9,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Desnutrição e Vitaminas",
+      "especialidade": "Puericultura",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 10,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Febre sem Sinais Localizatórios",
+      "especialidade": "Emergências",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 11,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Alergia Alimentar, Refluxo e Constipação",
+      "especialidade": "Gastroenterologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 12,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Diarreia Crônica e Doenças Funcionais",
+      "especialidade": "Gastroenterologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 13,
+      "bloco": "Bloco 2",
+      "data_liberacao": "13/04/2026",
+      "aula": "Hepatologia na Emergência",
+      "especialidade": "Gastroenterologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 14,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Violência contra a criança e o adolescente",
+      "especialidade": "Emergências",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 15,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Doenças Exantemáticas",
+      "especialidade": "Infectologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 16,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Arboviroses",
+      "especialidade": "Infectologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 17,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Pneumonias",
+      "especialidade": "Infectologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 18,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Bronquiolite e Coqueluche",
+      "especialidade": "Infectologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 19,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "COVID",
+      "especialidade": "Infectologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 20,
+      "bloco": "Bloco 3",
+      "data_liberacao": "20/04/2026",
+      "aula": "Infecções de Vias Aéreas Superiores (IVAS)",
+      "especialidade": "Infectologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 21,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Nutrologia em Pediatria",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 22,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Cuidados Paliativos em Pediatria",
+      "especialidade": "Puericultura",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 23,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Diarreia Aguda",
+      "especialidade": "Emergências",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 24,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Suporte Avançado de Vida em Pediatria (PALS)",
+      "especialidade": "Emergências",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 25,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Cefaleias na Infância",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 26,
+      "bloco": "Bloco 4",
+      "data_liberacao": "27/04/2026",
+      "aula": "Parasitoses Intestinais",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 27,
+      "bloco": "Bloco 5",
+      "data_liberacao": "04/05/2026",
+      "aula": "Reanimação Neonatal",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 28,
+      "bloco": "Bloco 5",
+      "data_liberacao": "04/05/2026",
+      "aula": "Infecções Congênitas",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 29,
+      "bloco": "Bloco 5",
+      "data_liberacao": "04/05/2026",
+      "aula": "Triagens Neonatais",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 30,
+      "bloco": "Bloco 5",
+      "data_liberacao": "04/05/2026",
+      "aula": "Icterícia e Colestase Neonatal",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 31,
+      "bloco": "Bloco 5",
+      "data_liberacao": "04/05/2026",
+      "aula": "Ingestão e Aspiração de Corpo Estranho e BRUE",
+      "especialidade": "Emergências",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 32,
+      "bloco": "Bloco 6",
+      "data_liberacao": "11/05/2026",
+      "aula": "Intoxicações",
+      "especialidade": "Emergências",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 33,
+      "bloco": "Bloco 6",
+      "data_liberacao": "11/05/2026",
+      "aula": "Peçonhentos, Raiva e Tétano",
+      "especialidade": "Emergências",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 34,
+      "bloco": "Bloco 6",
+      "data_liberacao": "11/05/2026",
+      "aula": "Dermatite Atópica e Lesões Benignas do Recém-Nascido",
+      "especialidade": "Dermatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 35,
+      "bloco": "Bloco 6",
+      "data_liberacao": "11/05/2026",
+      "aula": "Dermatoses e Infecções de Partes Moles",
+      "especialidade": "Dermatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 36,
+      "bloco": "Bloco 6",
+      "data_liberacao": "11/05/2026",
+      "aula": "Infecção de Trato Urinário (ITU)",
+      "especialidade": "Infectologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 37,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Cardiopatias Congênitas",
+      "especialidade": "Cardiologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 38,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Hipertensão Arterial Sistêmica (HAS)",
+      "especialidade": "Cardiologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 39,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Miocardite, Síncope, Insuficiência Cardíaca",
+      "especialidade": "Cardiologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 40,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Sepse Pediátrica",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 41,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Choque e Drogas Vasoativas",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 42,
+      "bloco": "Bloco 7",
+      "data_liberacao": "18/05/2026",
+      "aula": "Convulsão na Emergência e Convulsão Febril",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 43,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Sepse Neonatal",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 44,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Desconforto Respiratório Neonatal",
+      "especialidade": "Neonatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 45,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Outras Doenças Neonatais",
+      "especialidade": "Neonatologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 46,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Distúrbios Metabólicos Neonatais",
+      "especialidade": "Neonatologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 47,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Nutrição do Pré-Termo",
+      "especialidade": "Neonatologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 48,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Adenomegalias",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 49,
+      "bloco": "Bloco 8",
+      "data_liberacao": "25/05/2026",
+      "aula": "Infecções Fúngicas",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 50,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Imunodeficiências para o Pediatra",
+      "especialidade": "Imunologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 51,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Alergia 1: Rinite e Angioedema",
+      "especialidade": "Imunologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 52,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Alergia 2: Reações de Hipersensibilidade",
+      "especialidade": "Imunologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 53,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Autoinflamatórias",
+      "especialidade": "Imunologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 54,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Neoplasias Pediátricas",
+      "especialidade": "Oncologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 55,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Emergências Oncológicas",
+      "especialidade": "Oncologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 56,
+      "bloco": "Bloco 9",
+      "data_liberacao": "01/06/2026",
+      "aula": "Ética em Pediatria",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 57,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Diabetes (DM)",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 58,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Cetoacidose Diabética (CAD)",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 59,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Hiperplasia Adrenal Congênita (HAC)",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 60,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Hipotireoidismo",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 61,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Pediatria Geral",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 62,
+      "bloco": "Bloco 10",
+      "data_liberacao": "08/06/2026",
+      "aula": "Genética",
+      "especialidade": "Genética",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 63,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Introdução às Anemias e Hemocomponentes",
+      "especialidade": "Hematologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 64,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Anemia Falciforme",
+      "especialidade": "Hematologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 65,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Anemia Ferropriva e Talassemia",
+      "especialidade": "Hematologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 66,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Hemostasia e Distúrbios Hemorrágicos",
+      "especialidade": "Hematologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 67,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Diferenças no Desenvolvimento Sexual",
+      "especialidade": "Endocrinologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 68,
+      "bloco": "Bloco 11",
+      "data_liberacao": "15/06/2026",
+      "aula": "Doenças Neuromusculares na Infância",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 69,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Medicina do Adolescente",
+      "especialidade": "Puericultura",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 70,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Psiquiatria da Infância e Adolescência",
+      "especialidade": "Puericultura",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 71,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Nefrologia Pediátrica",
+      "especialidade": "Nefrologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 72,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Doença Renal Crônica e Lesão Renal Aguda",
+      "especialidade": "Nefrologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 73,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Miscelânea em Nefropediatria",
+      "especialidade": "Nefrologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 74,
+      "bloco": "Bloco 12",
+      "data_liberacao": "22/06/2026",
+      "aula": "Infecções Sexualmente Transmissíveis",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 75,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Sono e seus Distúrbios",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 76,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Kawasaki, Vasculite por IgA e Febre Reumática",
+      "especialidade": "Reumatologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 77,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Artrite Idiopática Juvenil",
+      "especialidade": "Reumatologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 78,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Lúpus Eritematoso Sistêmico",
+      "especialidade": "Reumatologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 79,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Miopatias Autoimunes Sistêmicas",
+      "especialidade": "Reumatologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 80,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Ortopedia Pediátrica",
+      "especialidade": "Especialidade Pediátrica: Ortopedia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 81,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "Osteomielite e Artrite Séptica",
+      "especialidade": "Especialidade Pediátrica: Ortopedia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 82,
+      "bloco": "Bloco 13",
+      "data_liberacao": "29/06/2026",
+      "aula": "HIV",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 83,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Vacinação",
+      "especialidade": "Infectologia",
+      "prioridade": "Verde"
+    },
+    {
+      "id": 84,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Meningite e Encefalite",
+      "especialidade": "Infectologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 85,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Tuberculose",
+      "especialidade": "Infectologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 86,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Asma",
+      "especialidade": "Pneumologia",
+      "prioridade": "Amarela"
+    },
+    {
+      "id": 87,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Fibrose Cística e Diferenciais",
+      "especialidade": "Pneumologia",
+      "prioridade": "Vermelha"
+    },
+    {
+      "id": 88,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Síndromes Febris",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 89,
+      "bloco": "Bloco 14",
+      "data_liberacao": "06/07/2026",
+      "aula": "Hepatites Virais",
+      "especialidade": "Infectologia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 90,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Bases da Neurociência",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 91,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Outras Alterações no Neurodesenvolvimento",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 92,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Neurovascular Infantil",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 93,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Síndromes Neurocutâneas na Infância",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 94,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Erros Inatos do Metabolismo e Doenças Neurodegenerativas",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 95,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Doenças Sistêmicas com Acometimento do Sistema Nervoso Central",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 96,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Ataxias na Infância",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 97,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Doenças Desmielinizantes e Encefalite Autoimune",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 98,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Hipertensão Intracraniana e Hidrocefalia",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 99,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Malformações do Sistema Nervoso",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 100,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Neurologia Fetal e Neonatal",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 101,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Neoplasias de Sistema Nervoso Central",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 102,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Epilepsias na Infância",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 103,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Paralisia Cerebral e Outros Distúrbios do Movimento",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 104,
+      "bloco": "Bônus Neurologia Pediátrica",
+      "data_liberacao": "13/07/2026",
+      "aula": "Alterações na Forma e Volume do Crânio",
+      "especialidade": "Neuro-Ped",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 105,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Insuficiência Respiratória e Síndrome do Desconforto Respiratório Agudo Pediátrico (PARDS)",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 106,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Ventilação Mecânica",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 107,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Sedoanalgesia e Sequência Rápida de Intubação",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 108,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Síndrome de Ativação Macrofágica",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 109,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Politrauma, Afogamento",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 110,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "USG (FAST, Pulmonar e Cardio funcional)",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 111,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Traumatismo Cranioencefálico e Hipertensão Intracraniana",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 112,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Distúrbio Hidroeletrolítico",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 113,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Distúrbio Ácido Básico",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 114,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Queimaduras",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 115,
+      "bloco": "Bônus Intensiva Pediátrica",
+      "data_liberacao": "20/07/2026",
+      "aula": "Morte encefálica",
+      "especialidade": "Intensiva Pediátrica",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 116,
+      "bloco": "Bônus Cirurgia Pediátrica",
+      "data_liberacao": "27/07/2026",
+      "aula": "Cirurgia Pediátrica no PS",
+      "especialidade": "Cirurgia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 117,
+      "bloco": "Bônus Cirurgia Pediátrica",
+      "data_liberacao": "27/07/2026",
+      "aula": "Uropediatria e Hérnias",
+      "especialidade": "Cirurgia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 118,
+      "bloco": "Bônus Cirurgia Pediátrica",
+      "data_liberacao": "27/07/2026",
+      "aula": "Malformações Congênitas",
+      "especialidade": "Cirurgia",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 119,
+      "bloco": "Bônus Otorrino e OftalmoPed",
+      "data_liberacao": "03/08/2026",
+      "aula": "Otites, Perda Auditiva, Rinossinusites e Epistaxe",
+      "especialidade": "Otorrino",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 120,
+      "bloco": "Bônus Otorrino e OftalmoPed",
+      "data_liberacao": "03/08/2026",
+      "aula": "Rinites e Afecções da Laringe e Faringe",
+      "especialidade": "Otorrino",
+      "prioridade": "Bônus"
+    },
+    {
+      "id": 121,
+      "bloco": "Bônus Otorrino e OftalmoPed",
+      "data_liberacao": "03/08/2026",
+      "aula": "Oftalmopediatria",
+      "especialidade": "Oftalmologia",
+      "prioridade": "Bônus"
+    }
+  ]
+}</script>
+<script>
+'use strict';
+
+const CUSTOM_SCHEDULE_KEY = 'medcof_semiextensivo_tep_schedule_custom_v1';
+const THEME_KEY = 'medcof_semiextensivo_tep_theme_v1';
+const PRIORITIES = ['Diamante', 'Verde', 'Amarela', 'Vermelha', 'Bônus'];
+const LEGACY_STORAGE_KEY = 'medcof_semiextensivo_tep_cronograma_v1';
+let schedule = null;
+let progress = null;
+let settings = null;
+let progressKey = '';
+let settingsKey = '';
+let storageAvailable = true;
+
+function getDefaultSchedule() {
+    const data = JSON.parse(document.getElementById('default-schedule-data').textContent);
+    if (!isValidSchedule(data)) throw new Error('O cronograma padrão incorporado ao HTML é inválido.');
+    return data;
+}
+function safeId(value) { return String(value || 'cronograma').replace(/[^a-zA-Z0-9_-]/g, '_'); }
+function progressStorageKey() { return `medcof_progress_${safeId(schedule.cronograma_id)}`; }
+function settingsStorageKey() { return `medcof_settings_${safeId(schedule.cronograma_id)}`; }
+function normalizePriority(value) { return PRIORITIES.includes(value) ? value : 'Verde'; }
+function formatLocalDate(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+function parseBRDate(value) { const [d,m,y] = String(value).split('/').map(Number); return new Date(y,m-1,d); }
+function parseISODate(value) { const [y,m,d] = String(value).split('-').map(Number); return new Date(y,m-1,d); }
+function formatBRDate(date) { return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`; }
+function shiftReleaseDate(brDate) {
+    const originalStart = parseISODate(schedule.data_inicio);
+    const chosenStart = parseISODate(settings.data_inicio || schedule.data_inicio);
+    const offset = Math.round((chosenStart - originalStart) / 86400000);
+    const d = parseBRDate(brDate); d.setDate(d.getDate()+offset); return d;
+}
+function isValidDateBR(v) { return /^\d{2}\/\d{2}\/\d{4}$/.test(String(v||'')); }
+function validateSchedule(value) {
+    const errors=[];
+    if(!value || typeof value!=='object' || Array.isArray(value)) return {ok:false,errors:['O JSON principal deve ser um objeto.']};
+    if(!value.cronograma_id || typeof value.cronograma_id!=='string') errors.push('cronograma_id é obrigatório e deve ser texto.');
+    if(!value.nome || typeof value.nome!=='string') errors.push('nome é obrigatório e deve ser texto.');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(value.data_inicio||''))) errors.push('data_inicio deve usar o formato AAAA-MM-DD.');
+    if(!Array.isArray(value.aulas) || !value.aulas.length) errors.push('aulas deve ser uma lista não vazia.');
+    const ids=new Set();
+    if(Array.isArray(value.aulas)) value.aulas.forEach((a,i)=>{
+        const pos=i+1;
+        if(!a || typeof a!=='object'){ errors.push(`Aula ${pos}: item inválido.`); return; }
+        const id=String(a.id??'');
+        if(!id) errors.push(`Aula ${pos}: id é obrigatório.`);
+        else if(ids.has(id)) errors.push(`Aula ${pos}: id duplicado (${id}).`);
+        else ids.add(id);
+        ['bloco','aula','especialidade'].forEach(k=>{ if(!a[k] || typeof a[k]!=='string') errors.push(`Aula ${pos}: ${k} é obrigatório.`); });
+        if(!isValidDateBR(a.data_liberacao)) errors.push(`Aula ${pos}: data_liberacao deve usar DD/MM/AAAA.`);
+        if(!PRIORITIES.includes(a.prioridade)) errors.push(`Aula ${pos}: prioridade deve ser Diamante, Verde, Amarela, Vermelha ou Bônus.`);
+    });
+    return {ok:!errors.length,errors};
+}
+function isValidSchedule(value) { return validateSchedule(value).ok; }
+function loadSchedule() {
+    try {
+        const custom = localStorage.getItem(CUSTOM_SCHEDULE_KEY);
+        if(custom){ const parsed=JSON.parse(custom); if(isValidSchedule(parsed)) return parsed; }
+    } catch(_) {}
+    return getDefaultSchedule();
+}
+function defaultProgress() { return {versao:4,cronograma_id:schedule.cronograma_id,visto:{},cortada:{},prioridade_override:{},plano_override:{}}; }
+function defaultSettings() { return {versao:3,data_inicio:schedule.data_inicio,prioridades_excluidas:[]}; }
+function migrateLegacyIfApplicable() {
+    return null;
+    try {
+        const legacy=localStorage.getItem(LEGACY_STORAGE_KEY); if(!legacy) return null;
+        const parsed=JSON.parse(legacy); if(!parsed || !Array.isArray(parsed.aulas)) return null;
+        const result=defaultProgress();
+        parsed.aulas.forEach(item=>{ const id=String(item.id); if(item.visto)result.visto[id]=true; if(item.cortada)result.cortada[id]=true; if(PRIORITIES.includes(item.prioridade))result.prioridade_override[id]=item.prioridade; });
+        return result;
+    } catch(_){ return null; }
+}
+function loadState() {
+    progressKey=progressStorageKey(); settingsKey=settingsStorageKey();
+    try {
+        const p=localStorage.getItem(progressKey);
+        progress=p?JSON.parse(p):(migrateLegacyIfApplicable()||defaultProgress());
+        if(!progress || progress.cronograma_id!==schedule.cronograma_id) progress=defaultProgress();
+        progress.visto=(progress.visto&&typeof progress.visto==='object')?progress.visto:{};
+        progress.cortada=(progress.cortada&&typeof progress.cortada==='object')?progress.cortada:{};
+        progress.prioridade_override=(progress.prioridade_override&&typeof progress.prioridade_override==='object')?progress.prioridade_override:{};
+        progress.plano_override=(progress.plano_override&&typeof progress.plano_override==='object')?progress.plano_override:{};
+        const s=localStorage.getItem(settingsKey);
+        settings=s?JSON.parse(s):defaultSettings();
+        if(!settings || !Array.isArray(settings.prioridades_excluidas)) settings=defaultSettings();
+        settings.prioridades_excluidas=settings.prioridades_excluidas.filter(x=>PRIORITIES.includes(x));
+        if(!settings.data_inicio) settings.data_inicio=schedule.data_inicio;
+        saveState(false);
+    } catch(_) {
+        storageAvailable=false; progress=defaultProgress(); settings=defaultSettings();
+        setSaveStatus('⚠️ O navegador não permitiu o armazenamento local. Exporte seu progresso antes de fechar.',true);
+    }
+}
+function getPriority(item) { return normalizePriority(progress.prioridade_override[String(item.id)] || item.prioridade); }
+function isSeen(id) { return Boolean(progress.visto[String(id)]); }
+function isCut(id) { return Boolean(progress.cortada[String(id)]); }
+function isPriorityClassExcluded(item) { return settings.prioridades_excluidas.includes(getPriority(item)); }
+function isPinnedToPlan(id) { return Boolean(progress.plano_override[String(id)]); }
+function isPriorityExcluded(item) { return isPriorityClassExcluded(item) && !isPinnedToPlan(item.id); }
+function saveState(show=true) {
+    if(!storageAvailable) return;
+    try { localStorage.setItem(progressKey,JSON.stringify(progress)); localStorage.setItem(settingsKey,JSON.stringify(settings)); if(show)setSaveStatus('💾 Alterações salvas automaticamente neste navegador.'); }
+    catch(_) { storageAvailable=false; setSaveStatus('⚠️ Não foi possível salvar automaticamente. Exporte o progresso antes de fechar.',true); }
+}
+function setSaveStatus(message,warning=false) { const el=document.getElementById('save-status'); el.textContent=message; el.classList.toggle('warning',warning); }
+function applyTheme(theme) { const dark=theme==='dark'; document.body.classList.toggle('dark-mode',dark); document.getElementById('theme-toggle').textContent=dark?'☀️ Modo claro':'🌙 Modo noturno'; }
+function loadTheme() { let theme='dark'; try{const saved=localStorage.getItem(THEME_KEY); if(saved==='light'||saved==='dark')theme=saved;}catch(_){} applyTheme(theme); }
+function toggleTheme() { const next=document.body.classList.contains('dark-mode')?'light':'dark'; applyTheme(next); try{localStorage.setItem(THEME_KEY,next)}catch(_){} }
+function checkStatusObj(releaseDate) { const today=new Date(); today.setHours(0,0,0,0); const diffDays=Math.ceil((releaseDate-today)/86400000); if(diffDays<=0)return{status:'liberado',text:'Já liberado'}; if(diffDays===1)return{status:'pendente',text:'Libera amanhã'}; return{status:'pendente',text:`Libera em ${diffDays} dias`}; }
+function toggleBlock(id) { const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
+function borderColor(priority) { return priority==='Diamante'?'#7bdff2':priority==='Verde'?'#27ae60':priority==='Amarela'?'#f39c12':priority==='Vermelha'?'#c0392b':'#9b59b6'; }
+function updateItem(id,field,value) {
+    const key=String(id);
+    if(field==='visto'){progress.visto[key]=Boolean(value);if(value)delete progress.cortada[key];}
+    else if(field==='cortada'){progress.cortada[key]=Boolean(value);if(value)delete progress.visto[key];}
+    else if(field==='prioridade')progress.prioridade_override[key]=normalizePriority(value);
+    else if(field==='plano'){ if(value)progress.plano_override[key]=true; else delete progress.plano_override[key]; }
+    saveState(); render();
+}
+function toggleCut(id) { updateItem(id,'cortada',!isCut(id)); }
+function togglePlanPin(id) { updateItem(id,'plano',!isPinnedToPlan(id)); }
+function updateStats() {
+    const total=schedule.aulas.length; let seen=0,removed=0,pending=0,handled=0;
+    schedule.aulas.forEach(item=>{ const viewed=isSeen(item.id); const removedFromPlan=isCut(item.id)||isPriorityExcluded(item); if(viewed)seen++; if(!viewed&&removedFromPlan)removed++; if(viewed||removedFromPlan)handled++; else pending++; });
+    const pct=total?(handled/total*100):0;
+    document.getElementById('total-aulas').textContent=total; document.getElementById('vistas').textContent=seen; document.getElementById('removidas').textContent=removed; document.getElementById('pendentes').textContent=pending; document.getElementById('progresso').textContent=`${pct.toFixed(1)}%`; document.getElementById('progress-detail').textContent=`${handled} de ${total} aulas tratadas`; document.getElementById('progress-fill').style.width=`${Math.min(100,pct)}%`;
+    const excluded=settings.prioridades_excluidas;
+    document.getElementById('filter-note').innerHTML=excluded.length?`Classes marcadas como <strong>fora do plano</strong>: <strong>${excluded.join(', ')}</strong>. As aulas continuam visíveis; você pode marcá-las como vistas ou usar <strong>📌</strong> para manter uma aula específica no plano.`:`Todas as classes de prioridade estão incluídas. Use <strong>Gerenciar cronograma</strong> para adaptar o plano ao tempo disponível.`;
+}
+function render() {
+    const container=document.getElementById('schedule-container');
+    const open=new Set(Array.from(document.querySelectorAll('.block-content')).filter(x=>x.style.display==='block').map(x=>x.id));
+    container.innerHTML='';
+    const blocks=new Map(); schedule.aulas.forEach(item=>{if(!blocks.has(item.bloco))blocks.set(item.bloco,[]);blocks.get(item.bloco).push(item);});
+    for(const [blockName,items] of blocks.entries()){
+        const release=shiftReleaseDate(items[0].data_liberacao); const status=checkStatusObj(release); const activeFirst=items.filter(i=>getPriority(i)==='Diamante'&&!isCut(i.id)&&!isPriorityExcluded(i)); const pendingFirst=activeFirst.filter(i=>!isSeen(i.id)).length; const safe=String(blockName).replace(/\W+/g,'');
+        const header=document.createElement('div'); header.className='block-header'; header.innerHTML=`<span><strong>${escapeHtml(blockName)}</strong> &nbsp;|&nbsp; Liberação: ${formatBRDate(release)} &nbsp;|&nbsp; <span style="color:#69d7e9;font-weight:700">Assistir primeiro pendentes: ${pendingFirst}/${activeFirst.length}</span></span><span class="badge ${status.status}">${status.text}</span>`;
+        const content=document.createElement('div'); content.className='block-content'; content.id=`block-${safe}`; if(open.has(content.id))content.style.display='block'; header.addEventListener('click',()=>toggleBlock(content.id));
+        items.forEach(item=>{
+            const priority=getPriority(item),cut=isCut(item.id),seen=isSeen(item.id),outOfPlan=isPriorityExcluded(item),pinned=isPinnedToPlan(item.id);
+            const row=document.createElement('div'); row.className='class-item'; if(outOfPlan)row.classList.add('out-of-plan'); row.style.borderLeftColor=borderColor(priority); row.style.opacity=(cut||seen)?'.6':'1';
+            const titleColor=cut?'var(--cut-color)':seen?'var(--seen-color)':outOfPlan?'inherit':'var(--class-title-color)'; const deco=(cut||seen)?'line-through':'none';
+            const statusBadge=outOfPlan?' <span class="plan-badge" title="Esta aula não faz parte do plano ativo, mas continua disponível">⏸ Fora do plano</span>':(pinned&&isPriorityClassExcluded(item)?' <span class="pin-badge" title="Exceção individual mantida no plano">📌 Mantida no plano</span>':'');
+            row.innerHTML=`<input type="checkbox" class="seen-checkbox" ${seen?'checked':''} ${cut?'disabled':''} aria-label="Marcar aula como vista"><div class="class-info"><div class="class-title" style="text-decoration:${deco};color:${titleColor}">${escapeHtml(item.aula)}${cut?' <span title="Aula removida individualmente do plano">✂️</span>':''}${statusBadge}</div><div class="class-spec">Especialidade: ${escapeHtml(item.especialidade)}</div></div><div class="controls"><button class="btn-cut ${cut?'active':''}" title="Remover / restaurar aula individualmente">✂️</button><button class="btn-plan ${pinned?'active':''}" title="${pinned?'Remover exceção: seguir a regra da classe':'Manter esta aula no plano mesmo se a classe estiver fora'}">📌</button><select class="${priority.toLowerCase()}" aria-label="Prioridade"><option value="Diamante" ${priority==='Diamante'?'selected':''}>Diamante (assistir primeiro)</option><option value="Verde" ${priority==='Verde'?'selected':''}>Verde (após diamantes)</option><option value="Amarela" ${priority==='Amarela'?'selected':''}>Amarela (após verdes)</option><option value="Vermelha" ${priority==='Vermelha'?'selected':''}>Vermelha (após amarelas)</option><option value="Bônus" ${priority==='Bônus'?'selected':''}>Bônus (conteúdo adicional)</option></select></div>`;
+            row.querySelector('.seen-checkbox').addEventListener('change',e=>updateItem(item.id,'visto',e.target.checked)); row.querySelector('.btn-cut').addEventListener('click',()=>toggleCut(item.id)); row.querySelector('.btn-plan').addEventListener('click',()=>togglePlanPin(item.id)); row.querySelector('select').addEventListener('change',e=>updateItem(item.id,'prioridade',e.target.value)); content.appendChild(row);
+        });
+        container.appendChild(header);container.appendChild(content);
+    }
+    updateStats();
+}
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function downloadJson(data,filename) { const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url); }
+function exportProgress() { const payload={versao:4,tipo:'progresso',cronograma_id:schedule.cronograma_id,exportado_em:new Date().toISOString(),progress,settings}; downloadJson(payload,`progresso_${safeId(schedule.cronograma_id)}_${formatLocalDate(new Date())}.json`); }
+function importProgressFile(file) {
+    const reader=new FileReader(); reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(!data||data.tipo!=='progresso'||data.cronograma_id!==schedule.cronograma_id||!data.progress)throw new Error(); progress=data.progress; progress.visto=(progress.visto&&typeof progress.visto==='object')?progress.visto:{};progress.cortada=(progress.cortada&&typeof progress.cortada==='object')?progress.cortada:{};progress.prioridade_override=(progress.prioridade_override&&typeof progress.prioridade_override==='object')?progress.prioridade_override:{};progress.plano_override=(progress.plano_override&&typeof progress.plano_override==='object')?progress.plano_override:{}; if(data.settings&&Array.isArray(data.settings.prioridades_excluidas))settings=data.settings; settings.prioridades_excluidas=settings.prioridades_excluidas.filter(x=>PRIORITIES.includes(x));if(!settings.data_inicio)settings.data_inicio=schedule.data_inicio;saveState();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;render();renderPriorities();alert('Progresso importado com sucesso.');}catch(_){alert('Arquivo de progresso inválido ou pertencente a outro cronograma.');}}; reader.readAsText(file);
+}
+function showView(name) {
+    document.querySelectorAll('.app-view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(`view-${name}`).classList.add('active');
+    if(name==='manage'){renderPriorities();showManageCurrent();}
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+function showStatus(id,msg,error=false) { const el=document.getElementById(id);el.hidden=false;el.textContent=msg;el.classList.toggle('error',error); }
+function renderPriorities() {
+    const grid=document.getElementById('priority-grid');grid.innerHTML='';
+    PRIORITIES.forEach(p=>{const count=schedule.aulas.filter(a=>getPriority(a)===p).length;const included=!settings.prioridades_excluidas.includes(p);const card=document.createElement('div');card.className='priority-card';card.innerHTML=`<label><input type="checkbox" value="${p}" ${included?'checked':''}> ${p}</label><div class="count">${count} aula(s) na classificação atual</div>`;grid.appendChild(card);});
+}
+function savePriorities() {
+    const excluded=PRIORITIES.filter(p=>!document.querySelector(`#priority-grid input[value="${p}"]`).checked); settings.prioridades_excluidas=excluded; saveState(); render(); showStatus('priority-status',excluded.length?`Classes marcadas como fora do plano: ${excluded.join(', ')}. As aulas continuam visíveis no cronograma.`:'Todas as classes estão incluídas no plano.');
+}
+function showManageCurrent(){ showStatus('file-status',`Cronograma ativo: ${schedule.nome} (${schedule.aulas.length} aulas).`); }
+function applySchedule(data,origin) {
+    const v=validateSchedule(data); if(!v.ok){showStatus(origin,`Erros encontrados: ${v.errors.slice(0,6).join(' | ')}${v.errors.length>6?' …':''}`,true);return false;}
+    try{localStorage.setItem(CUSTOM_SCHEDULE_KEY,JSON.stringify(data));}catch(_){}
+    schedule=data; storageAvailable=true; loadState(); document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio; render();renderPriorities();showStatus(origin,`Cronograma aplicado: ${data.nome} (${data.aulas.length} aulas).`);return true;
+}
+function handleScheduleFile(file){const reader=new FileReader();reader.onload=e=>{try{applySchedule(JSON.parse(e.target.result),'file-status')}catch(_){showStatus('file-status','O arquivo não contém JSON válido.',true)}};reader.readAsText(file);}
+function validateEditor(apply=false){try{const data=JSON.parse(document.getElementById('json-editor').value);const v=validateSchedule(data);if(!v.ok){showStatus('editor-status',`Erros encontrados: ${v.errors.slice(0,8).join(' | ')}${v.errors.length>8?' …':''}`,true);return;}if(apply)applySchedule(data,'editor-status');else showStatus('editor-status',`Código válido: ${data.aulas.length} aulas, ${new Set(data.aulas.map(x=>x.bloco)).size} blocos.`);}catch(e){showStatus('editor-status',`JSON inválido: ${e.message}`,true);}}
+function restoreDefaultSchedule(){if(!confirm('Voltar ao cronograma padrão incorporado ao index.html? O progresso salvo não será apagado.'))return;try{localStorage.removeItem(CUSTOM_SCHEDULE_KEY)}catch(_){}schedule=getDefaultSchedule();storageAvailable=true;loadState();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;render();renderPriorities();showStatus('file-status','Cronograma padrão incorporado ao HTML restaurado.');}
+
+function bindEvents(){
+    document.getElementById('data-inicio').addEventListener('change',e=>{if(!e.target.value)return;settings.data_inicio=e.target.value;saveState();render();});
+    document.getElementById('theme-toggle').addEventListener('click',toggleTheme);
+    document.getElementById('btn-export-progress').addEventListener('click',exportProgress);
+    document.getElementById('btn-import-progress').addEventListener('click',()=>document.getElementById('progress-file').click());
+    document.getElementById('progress-file').addEventListener('change',e=>{if(e.target.files[0])importProgressFile(e.target.files[0]);e.target.value='';});
+    document.getElementById('btn-open-manage').addEventListener('click',()=>showView('manage'));
+    document.getElementById('btn-open-about').addEventListener('click',()=>showView('about'));
+    document.getElementById('btn-back-manage').addEventListener('click',()=>showView('main'));
+    document.getElementById('btn-back-about').addEventListener('click',()=>showView('main'));
+    document.getElementById('save-priorities').addEventListener('click',savePriorities);
+    document.getElementById('export-schedule').addEventListener('click',()=>downloadJson(schedule,`${safeId(schedule.cronograma_id)}.json`));
+    document.getElementById('import-schedule').addEventListener('click',()=>document.getElementById('schedule-file').click());
+    document.getElementById('schedule-file').addEventListener('change',e=>{if(e.target.files[0])handleScheduleFile(e.target.files[0]);e.target.value='';});
+    document.getElementById('load-editor').addEventListener('click',()=>{document.getElementById('json-editor').value=JSON.stringify(schedule,null,2);showStatus('editor-status','Cronograma atual carregado no editor.');});
+    document.getElementById('validate-code').addEventListener('click',()=>validateEditor(false));
+    document.getElementById('apply-code').addEventListener('click',()=>validateEditor(true));
+    document.getElementById('restore-default').addEventListener('click',restoreDefaultSchedule);
+}
+function init(){
+    loadTheme();
+    try{schedule=loadSchedule();loadState();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;bindEvents();render();renderPriorities();setSaveStatus('💾 Cronograma carregado e salvamento automático local ativo.');}
+    catch(err){console.error(err);document.getElementById('schedule-container').innerHTML='<div class="empty-state"><strong>Não foi possível carregar o cronograma incorporado.</strong></div>';setSaveStatus('⚠️ Cronograma não carregado.',true);}
+}
+init();
+</script>
+</body>
+</html>
