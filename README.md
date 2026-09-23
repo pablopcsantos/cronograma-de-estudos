@@ -444,9 +444,3 @@ Aplicação web educacional desenvolvida de forma independente por **Pablo Phill
 O desenvolvimento contou com a utilização de ferramentas de inteligência artificial generativa como recurso auxiliar no processo de desenvolvimento, mantendo-se sob responsabilidade do autor a concepção, implementação, integração e verificação do projeto.
 
 Currículo Lattes: [http://lattes.cnpq.br/9500873674712528](http://lattes.cnpq.br/9500873674712528)
-
----
-
-## Licenciamento
-
-Nenhuma licença de software foi adicionada automaticamente a este repositório. A escolha de uma licença define permissões de uso, modificação e redistribuição e deve ser feita conscientemente pelo autor antes da publicação, caso se deseje conceder essas permissões.
