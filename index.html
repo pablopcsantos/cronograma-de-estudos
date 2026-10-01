@@ -110,6 +110,10 @@
         .manage-btn.orange { background:#e67e22; } .manage-btn.red { background:#c0392b; } .manage-btn.gray { background:#607d8b; }
         .manage-status { padding:10px 12px; border-radius:6px; margin-top:10px; background:#eef7f1; color:#20653a; }
         .manage-status.error { background:#fff0ef; color:#9e2b21; }
+        .manage-field { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+        .manage-field .field-grow { flex:1; min-width:260px; }
+        .manage-field label { display:block; font-weight:700; margin-bottom:7px; }
+        .manage-field input { width:100%; padding:10px 11px; border:1px solid #bfc9cf; border-radius:6px; background:var(--panel); color:var(--text); font-size:1rem; }
         .priority-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:12px; }
         .priority-card { border:1px solid var(--line); border-radius:8px; padding:13px; background:#fafafa; }
         .priority-card label { display:flex; gap:8px; align-items:center; font-weight:700; }
@@ -124,6 +128,7 @@
         body.dark-mode #json-editor { background:#171a1e; color:#e5e7eb; border-color:#59616a; }
         body.dark-mode .manage-status { background:#173b2a; color:#8ee4b2; }
         body.dark-mode .manage-status.error { background:#492323; color:#ffb3b3; }
+        body.dark-mode .manage-field input { background:#171a1e; color:#e5e7eb; border-color:#59616a; }
         @media(max-width:760px){ .priority-grid{grid-template-columns:1fr 1fr} }
         @media(max-width:460px){ .priority-grid{grid-template-columns:1fr} .manage-actions>*{width:100%;justify-content:center;text-align:center} }
 </style>
@@ -144,7 +149,7 @@ Currículo Lattes: http://lattes.cnpq.br/9500873674712528
 
 <div class="container">
     <section id="view-main" class="app-view active">
-        <h1>📚 Cronograma de Aulas - MedCof - Semiextensivo TEP 2026</h1>
+        <h1 id="schedule-title">📚 Cronograma de Aulas - MedCof - Semiextensivo TEP 2026</h1>
 
         <div class="config-panel">
             <div class="date-config">
@@ -196,6 +201,19 @@ Currículo Lattes: http://lattes.cnpq.br/9500873674712528
             <h1>⚙️ Gerenciar cronograma</h1>
         </div>
         <p class="manage-note">Esta área funciona como uma segunda página interna do webapp, mas permanece integralmente dentro deste mesmo arquivo <strong>index.html</strong>.</p>
+
+        <div class="manage-section">
+            <h2>Nome do cronograma</h2>
+            <p>Altere o nome exibido no topo da página principal. A mudança é salva no cronograma ativo e não altera o <code>cronograma_id</code>, portanto o progresso já registrado continua vinculado ao mesmo cronograma.</p>
+            <div class="manage-field">
+                <div class="field-grow">
+                    <label for="schedule-name">Nome exibido na página principal</label>
+                    <input type="text" id="schedule-name" maxlength="160" autocomplete="off">
+                </div>
+                <button class="manage-btn green" id="save-schedule-name">Salvar nome</button>
+            </div>
+            <div id="name-status" class="manage-status" hidden></div>
+        </div>
 
         <div class="manage-section">
             <h2>Classes de prioridade incluídas no plano</h2>
@@ -1385,6 +1403,24 @@ function saveState(show=true) {
     catch(_) { storageAvailable=false; setSaveStatus('⚠️ Não foi possível salvar automaticamente. Exporte o progresso antes de fechar.',true); }
 }
 function setSaveStatus(message,warning=false) { const el=document.getElementById('save-status'); el.textContent=message; el.classList.toggle('warning',warning); }
+function updateScheduleIdentity() {
+    const name=String(schedule?.nome||'Cronograma de estudos').trim()||'Cronograma de estudos';
+    const heading=document.getElementById('schedule-title'); if(heading)heading.textContent=`📚 ${name}`;
+    document.title=name;
+    const input=document.getElementById('schedule-name'); if(input)input.value=name;
+}
+function saveScheduleName() {
+    const input=document.getElementById('schedule-name'); const name=String(input.value||'').trim();
+    if(!name){showStatus('name-status','Informe um nome para o cronograma.',true);input.focus();return;}
+    if(name===schedule.nome){showStatus('name-status','O cronograma já está usando esse nome.');return;}
+    schedule={...schedule,nome:name};
+    try{localStorage.setItem(CUSTOM_SCHEDULE_KEY,JSON.stringify(schedule));storageAvailable=true;}
+    catch(_){updateScheduleIdentity();showStatus('name-status','Nome alterado nesta sessão, mas o navegador não permitiu salvá-lo localmente.',true);return;}
+    updateScheduleIdentity();
+    showStatus('name-status','Nome do cronograma salvo com sucesso.');
+    showManageCurrent();
+    setSaveStatus('💾 Nome do cronograma salvo automaticamente neste navegador.');
+}
 function applyTheme(theme) { const dark=theme==='dark'; document.body.classList.toggle('dark-mode',dark); document.getElementById('theme-toggle').textContent=dark?'☀️ Modo claro':'🌙 Modo noturno'; }
 function loadTheme() { let theme='dark'; try{const saved=localStorage.getItem(THEME_KEY); if(saved==='light'||saved==='dark')theme=saved;}catch(_){} applyTheme(theme); }
 function toggleTheme() { const next=document.body.classList.contains('dark-mode')?'light':'dark'; applyTheme(next); try{localStorage.setItem(THEME_KEY,next)}catch(_){} }
@@ -1450,15 +1486,15 @@ function renderPriorities() {
 function savePriorities() {
     const excluded=PRIORITIES.filter(p=>!document.querySelector(`#priority-grid input[value="${p}"]`).checked); settings.prioridades_excluidas=excluded; saveState(); render(); showStatus('priority-status',excluded.length?`Classes marcadas como fora do plano: ${excluded.join(', ')}. As aulas continuam visíveis no cronograma.`:'Todas as classes estão incluídas no plano.');
 }
-function showManageCurrent(){ showStatus('file-status',`Cronograma ativo: ${schedule.nome} (${schedule.aulas.length} aulas).`); }
+function showManageCurrent(){ updateScheduleIdentity(); showStatus('file-status',`Cronograma ativo: ${schedule.nome} (${schedule.aulas.length} aulas).`); }
 function applySchedule(data,origin) {
     const v=validateSchedule(data); if(!v.ok){showStatus(origin,`Erros encontrados: ${v.errors.slice(0,6).join(' | ')}${v.errors.length>6?' …':''}`,true);return false;}
     try{localStorage.setItem(CUSTOM_SCHEDULE_KEY,JSON.stringify(data));}catch(_){}
-    schedule=data; storageAvailable=true; loadState(); document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio; render();renderPriorities();showStatus(origin,`Cronograma aplicado: ${data.nome} (${data.aulas.length} aulas).`);return true;
+    schedule=data; storageAvailable=true; loadState(); updateScheduleIdentity(); document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio; render();renderPriorities();showStatus(origin,`Cronograma aplicado: ${data.nome} (${data.aulas.length} aulas).`);return true;
 }
 function handleScheduleFile(file){const reader=new FileReader();reader.onload=e=>{try{applySchedule(JSON.parse(e.target.result),'file-status')}catch(_){showStatus('file-status','O arquivo não contém JSON válido.',true)}};reader.readAsText(file);}
 function validateEditor(apply=false){try{const data=JSON.parse(document.getElementById('json-editor').value);const v=validateSchedule(data);if(!v.ok){showStatus('editor-status',`Erros encontrados: ${v.errors.slice(0,8).join(' | ')}${v.errors.length>8?' …':''}`,true);return;}if(apply)applySchedule(data,'editor-status');else showStatus('editor-status',`Código válido: ${data.aulas.length} aulas, ${new Set(data.aulas.map(x=>x.bloco)).size} blocos.`);}catch(e){showStatus('editor-status',`JSON inválido: ${e.message}`,true);}}
-function restoreDefaultSchedule(){if(!confirm('Voltar ao cronograma padrão incorporado ao index.html? O progresso salvo não será apagado.'))return;try{localStorage.removeItem(CUSTOM_SCHEDULE_KEY)}catch(_){}schedule=getDefaultSchedule();storageAvailable=true;loadState();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;render();renderPriorities();showStatus('file-status','Cronograma padrão incorporado ao HTML restaurado.');}
+function restoreDefaultSchedule(){if(!confirm('Voltar ao cronograma padrão incorporado ao index.html? O progresso salvo não será apagado.'))return;try{localStorage.removeItem(CUSTOM_SCHEDULE_KEY)}catch(_){}schedule=getDefaultSchedule();storageAvailable=true;loadState();updateScheduleIdentity();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;render();renderPriorities();showStatus('file-status','Cronograma padrão incorporado ao HTML restaurado.');}
 
 function bindEvents(){
     document.getElementById('data-inicio').addEventListener('change',e=>{if(!e.target.value)return;settings.data_inicio=e.target.value;saveState();render();});
@@ -1470,6 +1506,8 @@ function bindEvents(){
     document.getElementById('btn-open-about').addEventListener('click',()=>showView('about'));
     document.getElementById('btn-back-manage').addEventListener('click',()=>showView('main'));
     document.getElementById('btn-back-about').addEventListener('click',()=>showView('main'));
+    document.getElementById('save-schedule-name').addEventListener('click',saveScheduleName);
+    document.getElementById('schedule-name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveScheduleName();}});
     document.getElementById('save-priorities').addEventListener('click',savePriorities);
     document.getElementById('export-schedule').addEventListener('click',()=>downloadJson(schedule,`${safeId(schedule.cronograma_id)}.json`));
     document.getElementById('import-schedule').addEventListener('click',()=>document.getElementById('schedule-file').click());
@@ -1481,7 +1519,7 @@ function bindEvents(){
 }
 function init(){
     loadTheme();
-    try{schedule=loadSchedule();loadState();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;bindEvents();render();renderPriorities();setSaveStatus('💾 Cronograma carregado e salvamento automático local ativo.');}
+    try{schedule=loadSchedule();loadState();updateScheduleIdentity();document.getElementById('data-inicio').value=settings.data_inicio||schedule.data_inicio;bindEvents();render();renderPriorities();setSaveStatus('💾 Cronograma carregado e salvamento automático local ativo.');}
     catch(err){console.error(err);document.getElementById('schedule-container').innerHTML='<div class="empty-state"><strong>Não foi possível carregar o cronograma incorporado.</strong></div>';setSaveStatus('⚠️ Cronograma não carregado.',true);}
 }
 init();
