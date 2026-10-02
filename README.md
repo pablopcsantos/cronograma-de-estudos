@@ -1,5 +1,9 @@
 # Ferramenta de Cronogramas de Estudo
 
+*Read this in other languages: [English](README-en.md)*
+
+---
+
 Aplicação web educacional estática para **criar, editar, adaptar e acompanhar cronogramas de estudo** diretamente no navegador.
 
 A ferramenta foi projetada para ser reutilizável: o usuário pode trabalhar com diferentes cursos, provas, disciplinas ou rotinas de estudo por meio de cronogramas estruturados em JSON. O cronograma **“Semiextensivo TEP 2026 - Turma de Abril” da MedCof** está incorporado apenas como conjunto de dados demonstrativo e como exemplo prático de utilização da aplicação.
